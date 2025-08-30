@@ -47,22 +47,23 @@ class ConversationService:
         Prepare streaming chunks from client.
         """
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
             async def get_chunks():
                 chunks = []
                 async for chunk in self.client.generate(user_message):
                     chunks.append(chunk)
                 return chunks
-            
-            st.session_state.stream_chunks = loop.run_until_complete(get_chunks())
-            st.session_state.chunk_index = 0
-            loop.close()
-            
+
+            # Use a local event loop with a try/finally to ensure it's closed
+            loop = asyncio.new_event_loop()
+            try:
+                st.session_state.stream_chunks = loop.run_until_complete(get_chunks())
+                st.session_state.chunk_index = 0
+            finally:
+                loop.close()
+
             # Start streaming
             self._continue_streaming()
-            
+
         except Exception as e:
             st.error(f"Chunk preparation error: {str(e)}")
             self._cleanup_streaming()

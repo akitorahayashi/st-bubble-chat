@@ -79,5 +79,5 @@ def check_start_ai_thinking():
         st.rerun()
 
 
-if __name__ == "__main__" or True:
+if __name__ == "__main__":
     main()
