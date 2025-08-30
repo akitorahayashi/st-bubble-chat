@@ -1,15 +1,14 @@
+# Streamlit Bubble Chat
+
+A Streamlit component that allows you to easily create a bubble-style chat UI in your applications.
+
+
 ## Overview
 
-This repository is a template and showcase for building modern, well-structured Streamlit applications. It features a modular architecture for easy management and scalability of data apps.
+This component provides a simple and intuitive way to display chat messages, such as those from a chatbot or a live chat, in a familiar bubble format. It's designed to be highly customizable and easy to integrate into any Streamlit project.
 
-It serves as a practical guide and starting point for developing interactive web applications using Python and Streamlit.
+## Features
 
-## Showcase Overview
-
-The application is organized into the following sections, each demonstrating various Streamlit features:
-
-- **Text & Content**: Displaying text, Markdown, code blocks, and LaTeX
-- **Interactive Controls**: Gallery of widgets such as buttons, sliders, and select boxes
-- **Data Display**: Interactive dataframes, tables, and metrics
-- **Layout & Design**: Organizing content with columns, containers, tabs, and sidebar
-- **Charts & Graphs**: Interactive visualizations with Plotly
+-   **Bubble-style Interface**: Display messages in clean, modern chat bubbles.
+-   **Easy Integration**: Add a chat UI to your app with just a few lines of code.
+-   **Customizable**: (Coming soon) Customize colors, avatars, and more.
