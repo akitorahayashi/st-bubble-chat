@@ -1,4 +1,5 @@
 import os
+import time
 
 import streamlit as st
 
@@ -48,9 +49,11 @@ def draw_chat_messages():
 
 def handle_user_input():
     is_ai_thinking = st.session_state.get("ai_thinking", False)
+    
     if is_ai_thinking:
         st.chat_input("AIが応答中です...", disabled=True)
         return
+        
     user_input = st.chat_input("メッセージを入力")
     if user_input is not None:
         user_input = user_input.strip()

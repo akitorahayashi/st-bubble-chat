@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import AsyncGenerator
 
 
 class OllamaClientInterface(ABC):
@@ -8,15 +8,15 @@ class OllamaClientInterface(ABC):
     """
 
     @abstractmethod
-    def generate(self, prompt: str, model: str = None) -> Optional[str]:
+    def generate(self, prompt: str, model: str = None) -> AsyncGenerator[str, None]:
         """
-        Generate text using the model.
+        Generate text using the model with streaming.
 
         Args:
             prompt: The prompt to send to the model.
             model: The name of the model to use for generation.
 
         Returns:
-            The generated text or None if an error occurs.
+            AsyncGenerator yielding text chunks.
         """
         pass

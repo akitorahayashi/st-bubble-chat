@@ -1,8 +1,9 @@
+import json
 import logging
 import os
-from typing import Optional
+from typing import AsyncGenerator
 
-import requests
+import httpx
 import streamlit as st
 
 from .interface import OllamaClientInterface
@@ -30,19 +31,54 @@ class OllamaApiClient(OllamaClientInterface):
             )
         self.generate_endpoint = f"{self.api_url}/api/v1/generate"
 
-    def generate(self, prompt: str, model: str = None) -> Optional[str]:
+    async def _stream_response(self, prompt: str, model: str) -> AsyncGenerator[str, None]:
         """
-        Generates text using the Ollama API.
+        Stream response from the Ollama API.
+        """
+        payload = {
+            "prompt": prompt,
+            "model_name": model,
+            "stream": True,
+        }
+        
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, read=120.0)) as client:
+                async with client.stream(
+                    "POST",
+                    self.generate_endpoint,
+                    json=payload,
+                    headers={"Accept": "text/event-stream"},
+                ) as response:
+                    response.raise_for_status()
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            try:
+                                data = json.loads(line[6:])  # Remove "data: " prefix
+                                if "response" in data:
+                                    yield data["response"]
+                            except json.JSONDecodeError:
+                                continue
+        except httpx.RequestError as e:
+            logger.error(f"Ollama API streaming request failed: {e}")
+            return
+        except Exception as e:
+            logger.error(f"Unexpected error in Ollama API streaming: {e}")
+            return
+
+    def generate(self, prompt: str, model: str = None) -> AsyncGenerator[str, None]:
+        """
+        Generates text using the Ollama API with streaming.
 
         Args:
             prompt: The prompt to send to the model.
             model: The name of the model to use for generation.
 
         Returns:
-            The generated text from the API, or None if an error occurs.
+            AsyncGenerator yielding text chunks.
 
         Raises:
-            requests.exceptions.RequestException: If a network error occurs.
+            httpx.RequestError: If a network error occurs.
         """
         # Use environment variable model if not specified
         if model is None:
@@ -52,22 +88,4 @@ class OllamaApiClient(OllamaClientInterface):
                     "OLLAMA_MODEL is not configured in environment variables."
                 )
 
-        payload = {
-            "prompt": prompt,
-            "model": model,
-            "stream": False,
-        }
-        try:
-            response = requests.post(
-                self.generate_endpoint,
-                json=payload,
-                timeout=(10, 120),  # (connect, read)
-            )
-            response.raise_for_status()
-            return response.json().get("response", "")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Ollama API request failed: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Unexpected error in Ollama API call: {e}")
-            return None
+        return self._stream_response(prompt, model)

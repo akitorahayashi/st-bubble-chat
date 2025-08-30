@@ -110,11 +110,15 @@ def render_chat_messages(messages):
         unsafe_allow_html=True,
     )
 
-    for msg in messages:
+    for i, msg in enumerate(messages):
+        # Use unique keys to prevent flickering
         if msg["role"] == "user":
             html_content = render_user_message(msg["content"])
         else:
             html_content = render_ai_message(msg["content"])
-        st.markdown(html_content, unsafe_allow_html=True)
+        
+        # Use a container with unique key to prevent re-rendering
+        with st.container(key=f"msg_{i}_{msg['role']}"):
+            st.markdown(html_content, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)

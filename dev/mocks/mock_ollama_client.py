@@ -1,7 +1,11 @@
-import time
-from typing import Optional
+import asyncio
+from typing import AsyncGenerator
 
 from src.clients.ollama_api_client.interface import OllamaClientInterface
+
+# Streaming configuration constants
+CHARACTER_DELAY = 0.08  # Delay between characters (seconds)
+WORD_SPACE_DELAY = 0.05  # Delay for spaces between words (seconds)
 
 
 class MockOllamaApiClient(OllamaClientInterface):
@@ -19,16 +23,32 @@ class MockOllamaApiClient(OllamaClientInterface):
         ]
         self.response_index = 0
 
-    def generate(self, prompt: str, model: str = None) -> Optional[str]:
+    async def _stream_response(self, response_text: str) -> AsyncGenerator[str, None]:
         """
-        Generates mock text responses.
+        Stream a response text character by character with word boundaries.
+        """
+        words = response_text.split()
+        for i, word in enumerate(words):
+            # Stream each character of the word
+            for j, char in enumerate(word):
+                await asyncio.sleep(CHARACTER_DELAY)
+                yield char
+            
+            # Add space after word (except for the last word)
+            if i < len(words) - 1:
+                await asyncio.sleep(WORD_SPACE_DELAY)
+                yield " "
+
+    def generate(self, prompt: str, model: str = None) -> AsyncGenerator[str, None]:
+        """
+        Generates mock text responses with streaming.
 
         Args:
             prompt: The prompt to send to the model (ignored in mock).
             model: The name of the model to use for generation (ignored in mock).
 
         Returns:
-            A mock generated text response.
+            AsyncGenerator yielding text chunks.
         """
         # 特定の入力に対するカスタム応答
         custom_responses = {
@@ -42,15 +62,12 @@ class MockOllamaApiClient(OllamaClientInterface):
         # カスタム応答をチェック
         for key, response in custom_responses.items():
             if prompt.lower().strip() == key.lower():
-                time.sleep(0.5)  # 短い遅延
-                return response
+                return self._stream_response(response)
 
         # デフォルトのモック応答
-        # Simulate API call delay
-        time.sleep(2)
-
-        # Return mock response
         response = self.mock_responses[self.response_index % len(self.mock_responses)]
         self.response_index += 1
-
-        return f"{response}\n\n（{prompt[:30]} に対するモック応答）"
+        
+        full_response = f"{response}\n\n（{prompt[:30]} に対するモック応答）"
+        
+        return self._stream_response(full_response)
