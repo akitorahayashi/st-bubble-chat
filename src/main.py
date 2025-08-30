@@ -1,19 +1,20 @@
 import streamlit as st
-import time
+from components.chat_ui import load_css, render_chat_messages, render_thinking_bubble, render_sidebar
+from services.conversation_service import handle_ai_thinking, should_start_ai_thinking
+from services.ollama_api_client import get_ollama_client
 
 st.title("Bubble Chat UI")
 
+# セッション状態の初期化
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# サイドバーに新しいチャット開始ボタンを配置
-with st.sidebar:
-    st.title("チャット")
-    if st.button("⟲ 新しいチャットを開始", help="履歴をクリアして新しいチャットを開始", key="new_chat_btn"):
-        st.session_state.messages.clear()
-        if "ai_thinking" in st.session_state:
-            del st.session_state.ai_thinking
-        st.rerun()
+# Ollama APIクライアントを初期化（リロード時に環境変数を再読み込み）
+if "ollama_client" not in st.session_state:
+    st.session_state.ollama_client = get_ollama_client()
+
+# サイドバーを描画
+render_sidebar()
 
 # AI処理中はチャット入力を無効化
 is_ai_thinking = st.session_state.get("ai_thinking", False)
@@ -28,136 +29,18 @@ else:
             st.session_state.messages.append({"role": "user", "content": user_input})
             st.rerun()
 
-st.markdown("""
-<style>
-.chat-container {
-    max-width: 800px;
-    margin: 0 auto;
-}
+# CSSを読み込み
+load_css()
 
-.message {
-    margin: 10px 0;
-    display: flex;
-    align-items: flex-start;
-}
-
-.user-message {
-    justify-content: flex-end;
-}
-
-.ai-message {
-    justify-content: flex-start;
-}
-
-.message-content {
-    max-width: 70%;
-    padding: 12px 16px;
-    border-radius: 20px;
-    word-wrap: break-word;
-}
-
-.user-message .message-content {
-    background-color: #007bff;
-    color: white;
-    margin-left: 20px;
-}
-
-.ai-message .message-content {
-    background-color: #f1f1f1;
-    color: #333;
-    margin-right: 20px;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin: 0 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-
-.user-avatar {
-    background-color: #007bff;
-    color: white;
-}
-
-.ai-avatar {
-    background-color: #28a745;
-    color: white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-
-# メッセージ表示
-for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        st.markdown(f"""
-        <div class="message user-message">
-            <div class="message-content">
-                {msg["content"]}
-            </div>
-            <div class="avatar user-avatar">
-                🧑
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="message ai-message">
-            <div class="avatar ai-avatar">
-                🤖
-            </div>
-            <div class="message-content">
-                {msg["content"]}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+# チャットメッセージを描画
+render_chat_messages(st.session_state.messages)
 
 # AIが応答中の場合の思考中吹き出し表示
-if "ai_thinking" in st.session_state and st.session_state.ai_thinking:
-    st.markdown("""
-    <div class="message ai-message">
-        <div class="avatar ai-avatar">
-            🤖
-        </div>
-        <div class="message-content">
-            <div style="display: flex; align-items: center;">
-                <div class="thinking-dots">
-                    考え中...
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # AIの応答を非同期で処理
-    try:
-        time.sleep(3)
-        ai_response = f"AIが返す: {st.session_state.messages[-1]['content']}"
-        st.session_state.messages.append({"role": "ai", "content": ai_response})
-        st.session_state.ai_thinking = False
-        
-        # 直近 10 件に制限
-        MAX_MSG = 10
-        if len(st.session_state.messages) > MAX_MSG:
-            st.session_state.messages = st.session_state.messages[-MAX_MSG:]
-            
-        st.rerun()
-    except Exception as e:
-        st.error("応答の生成に失敗しました。しばらくしてから再試行してください。")
-        st.session_state.ai_thinking = False
-        st.rerun()
+if st.session_state.get("ai_thinking", False):
+    st.markdown(render_thinking_bubble(), unsafe_allow_html=True)
+    handle_ai_thinking(st.session_state.ollama_client)
 
 # ユーザーメッセージが追加されたばかりで、まだAI応答がない場合
-if (len(st.session_state.messages) > 0 and 
-    st.session_state.messages[-1]["role"] == "user" and
-    not st.session_state.get("ai_thinking", False)):
+if should_start_ai_thinking():
     st.session_state.ai_thinking = True
     st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
