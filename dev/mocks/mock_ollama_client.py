@@ -4,8 +4,7 @@ from typing import AsyncGenerator
 from src.clients.ollama_api_client.interface import OllamaClientInterface
 
 # Streaming configuration
-CHARACTER_DELAY = 0.05  # Delay between characters (seconds)
-SPACE_DELAY = 0.02      # Delay for spaces between words (seconds)
+WORD_DELAY = 0.15  # Delay between words (seconds)
 
 
 class MockOllamaApiClient(OllamaClientInterface):
@@ -25,19 +24,16 @@ class MockOllamaApiClient(OllamaClientInterface):
 
     async def _stream_response(self, response_text: str) -> AsyncGenerator[str, None]:
         """
-        Stream a response text character by character with word boundaries.
+        Stream a response text word by word (like real API).
         """
         words = response_text.split()
         for i, word in enumerate(words):
-            # Stream each character of the word
-            for j, char in enumerate(word):
-                await asyncio.sleep(CHARACTER_DELAY)
-                yield char
-            
-            # Add space after word (except for the last word)
+            await asyncio.sleep(WORD_DELAY)
+            # Yield word with space (except for the last word)
             if i < len(words) - 1:
-                await asyncio.sleep(SPACE_DELAY)
-                yield " "
+                yield word + " "
+            else:
+                yield word
 
     def generate(self, prompt: str, model: str = None) -> AsyncGenerator[str, None]:
         """
