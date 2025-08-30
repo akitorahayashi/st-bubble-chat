@@ -63,7 +63,7 @@ class MockOllamaApiClient(OllamaClientInterface):
         # Default mock response
         response = self.mock_responses[self.response_index % len(self.mock_responses)]
         self.response_index += 1
-        
+
         full_response = f"{response}\n\n(Mock response to: {prompt[:30]}{'...' if len(prompt) > 30 else ''})"
-        
+
         return self._stream_response(full_response)
