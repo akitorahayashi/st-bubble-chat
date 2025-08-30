@@ -18,88 +18,58 @@ def load_css():
     """, unsafe_allow_html=True)
 
 
-def render_message(message, role):
-    """Render chat message with inline styles"""
-    if role == "user":
-        return f"""
-        <style>
-        .user-message {{
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-end;
-            margin: 10px 0;
-        }}
-        .user-content {{
-            background-color: #007bff;
-            color: white;
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            word-wrap: break-word;
-            margin-left: 20px;
-        }}
-        .user-avatar {{
-            width: 40px;
-            height: 40px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            margin-left: 10px;
-        }}
-        </style>
-        <div class="user-message">
-            <div class="user-content">
-                {html.escape(message).replace(chr(10), '<br>')}
-            </div>
-            <div class="user-avatar">
-                🧑
-            </div>
+def render_user_message(message):
+    """Render user message with inline styles"""
+    return f"""
+    <style>
+    .user-message {{
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        margin: 10px 0;
+    }}
+    .user-content {{
+        background-color: #007bff;
+        color: white;
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 20px;
+        word-wrap: break-word;
+    }}
+    </style>
+    <div class="user-message">
+        <div class="user-content">
+            {html.escape(message).replace(chr(10), '<br>')}
         </div>
-        """
-    else:
-        return f"""
-        <style>
-        .ai-message {{
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-start;
-            margin: 10px 0;
-        }}
-        .ai-content {{
-            background-color: #f1f1f1;
-            color: #333;
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            word-wrap: break-word;
-            margin-right: 20px;
-        }}
-        .ai-avatar {{
-            width: 40px;
-            height: 40px;
-            background-color: #28a745;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            margin-right: 10px;
-        }}
-        </style>
-        <div class="ai-message">
-            <div class="ai-avatar">
-                🤖
-            </div>
-            <div class="ai-content">
-                {html.escape(message).replace(chr(10), '<br>')}
-            </div>
+    </div>
+    """
+
+
+def render_ai_message(message):
+    """Render AI message with inline styles"""
+    return f"""
+    <style>
+    .ai-message {{
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        margin: 10px 0;
+    }}
+    .ai-content {{
+        background-color: #f1f1f1;
+        color: #333;
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 20px;
+        word-wrap: break-word;
+    }}
+    </style>
+    <div class="ai-message">
+        <div class="ai-content">
+            {html.escape(message).replace(chr(10), '<br>')}
         </div>
-        """
+    </div>
+    """
 
 
 def render_thinking_bubble():
@@ -118,25 +88,9 @@ def render_thinking_bubble():
         max-width: 70%;
         padding: 12px 16px;
         border-radius: 20px;
-        margin-right: 20px;
-    }
-    .thinking-avatar {
-        width: 40px;
-        height: 40px;
-        background-color: #28a745;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        margin-right: 10px;
     }
     </style>
     <div class="thinking-message">
-        <div class="thinking-avatar">
-            🤖
-        </div>
         <div class="thinking-content">
             <div style="display: flex; align-items: center;">
                 <div class="thinking-dots">
@@ -162,7 +116,10 @@ def render_chat_messages(messages):
     """, unsafe_allow_html=True)
     
     for msg in messages:
-        html_content = render_message(msg["content"], msg["role"])
+        if msg["role"] == "user":
+            html_content = render_user_message(msg["content"])
+        else:
+            html_content = render_ai_message(msg["content"])
         st.markdown(html_content, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
