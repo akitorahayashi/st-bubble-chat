@@ -1,6 +1,6 @@
-import streamlit as st
-from pathlib import Path
 import html
+
+import streamlit as st
 
 
 def render_user_message(message):
@@ -96,7 +96,8 @@ def render_thinking_bubble():
 
 def render_chat_messages(messages):
     """Render all chat messages with inline styles"""
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     .chat-container {
         max-width: 800px;
@@ -105,15 +106,15 @@ def render_chat_messages(messages):
     }
     </style>
     <div class="chat-container">
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     for msg in messages:
         if msg["role"] == "user":
             html_content = render_user_message(msg["content"])
         else:
             html_content = render_ai_message(msg["content"])
         st.markdown(html_content, unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
-
+    st.markdown("</div>", unsafe_allow_html=True)

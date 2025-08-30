@@ -23,7 +23,7 @@ class OllamaApiClient(OllamaClientInterface):
                 self.api_url = st.secrets.get("OLLAMA_API_ENDPOINT")
             except Exception:
                 pass
-        
+
         if not self.api_url:
             raise ValueError(
                 "OLLAMA_API_ENDPOINT is not configured in environment variables or Streamlit secrets."
@@ -48,8 +48,10 @@ class OllamaApiClient(OllamaClientInterface):
         if model is None:
             model = os.getenv("OLLAMA_MODEL")
             if not model:
-                raise ValueError("OLLAMA_MODEL is not configured in environment variables.")
-            
+                raise ValueError(
+                    "OLLAMA_MODEL is not configured in environment variables."
+                )
+
         payload = {
             "prompt": prompt,
             "model": model,
@@ -69,4 +71,3 @@ class OllamaApiClient(OllamaClientInterface):
         except Exception as e:
             logger.error(f"Unexpected error in Ollama API call: {e}")
             return None
-
