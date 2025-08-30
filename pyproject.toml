@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "streamlit-template"
+name = "st-bubble-chat"
 version = "0.1.0"
-description = "A template structure and showcase for a Streamlit application."
+description = "A Streamlit component to create a bubble-style chat UI."
 authors = ["akitorahayashi <atora.has75@gmail.com>"]
 readme = "README.md"
 package-mode = false
