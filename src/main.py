@@ -31,8 +31,10 @@ def initialize_session():
             from dev.mocks.mock_ollama_client import MockOllamaApiClient
 
             st.session_state.ollama_client = MockOllamaApiClient()
+            st.sidebar.success("🚧 DEBUG MODE: Using Mock Client")
         else:
             st.session_state.ollama_client = OllamaApiClient()
+            st.sidebar.info("🌐 Using Real Ollama API")
     if "conversation_service" not in st.session_state:
         st.session_state.conversation_service = ConversationService(
             st.session_state.ollama_client
@@ -64,7 +66,10 @@ def handle_user_input():
 
 def handle_ai_response():
     if st.session_state.get("ai_thinking", False):
-        st.markdown(render_thinking_bubble(), unsafe_allow_html=True)
+        # Show thinking bubble only before streaming starts
+        if not st.session_state.get("streaming_active", False):
+            st.markdown(render_thinking_bubble(), unsafe_allow_html=True)
+        
         st.session_state.conversation_service.handle_ai_thinking()
 
 

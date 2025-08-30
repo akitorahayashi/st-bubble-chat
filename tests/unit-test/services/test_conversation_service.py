@@ -126,63 +126,51 @@ class TestConversationService:
         # Should not modify state
         assert not mock_st.session_state.get("streaming_started", False)
     
-    def test_handle_ai_thinking_success(self, conversation_service, mock_st):
-        """Test handle_ai_thinking successful execution"""
+    def test_handle_ai_thinking_streaming_start(self, conversation_service, mock_st):
+        """Test handle_ai_thinking starts streaming"""
         mock_st.session_state.messages = [{"role": "user", "content": "Test message"}]
         mock_st.session_state["ai_thinking"] = True
+        mock_st.session_state["streaming_active"] = False
         
-        with patch.object(conversation_service, '_get_response', return_value="Test response") as mock_get_response, \
-             patch.object(conversation_service, 'limit_messages') as mock_limit:
-            
+        with patch.object(conversation_service, '_start_streaming') as mock_start:
             conversation_service.handle_ai_thinking()
+            mock_start.assert_called_once()
+    
+    def test_handle_ai_thinking_streaming_continue(self, conversation_service, mock_st):
+        """Test handle_ai_thinking continues streaming"""
+        mock_st.session_state["ai_thinking"] = True
+        mock_st.session_state["streaming_active"] = True
+        
+        with patch.object(conversation_service, '_continue_streaming') as mock_continue:
+            conversation_service.handle_ai_thinking()
+            mock_continue.assert_called_once()
+    
+    def test_start_streaming(self, conversation_service, mock_st):
+        """Test _start_streaming initializes correctly"""
+        mock_st.session_state.messages = [{"role": "user", "content": "Test message"}]
+        
+        with patch.object(conversation_service, '_prepare_streaming_chunks') as mock_prepare:
+            conversation_service._start_streaming()
             
-            # Check that response was processed correctly
-            mock_get_response.assert_called_once_with("Test message")
+            assert mock_st.session_state.get("streaming_active") is True
+            assert mock_st.session_state.get("streaming_response") == ""
+            assert mock_st.session_state.get("streaming_complete") is False
             assert len(mock_st.session_state.messages) == 2
             assert mock_st.session_state.messages[-1]["role"] == "ai"
-            assert mock_st.session_state.messages[-1]["content"] == "Test response"
-            assert mock_st.session_state.get("ai_thinking") is False
-            mock_limit.assert_called_once()
-            mock_st.rerun.assert_called_once()
+            mock_prepare.assert_called_once_with("Test message")
     
-    def test_handle_ai_thinking_error(self, conversation_service, mock_st):
-        """Test handle_ai_thinking with error"""
-        mock_st.session_state.messages = [{"role": "user", "content": "Test message"}]
+    def test_cleanup_streaming(self, conversation_service, mock_st):
+        """Test _cleanup_streaming clears state"""
+        # Set up streaming state
         mock_st.session_state["ai_thinking"] = True
+        mock_st.session_state["streaming_active"] = True
+        mock_st.session_state["stream_chunks"] = ['T', 'e', 's', 't']
         
-        with patch.object(conversation_service, '_get_response', side_effect=Exception("Test error")):
-            conversation_service.handle_ai_thinking()
-            
-            # Check that error was handled properly
-            assert mock_st.session_state.get("ai_thinking") is False
-            mock_st.rerun.assert_called_once()
-    
-    def test_get_response_success(self, conversation_service, mock_client):
-        """Test _get_response successful execution"""
-        user_message = "Test message"
-        expected_response = "Test response"
+        conversation_service._cleanup_streaming()
         
-        # Mock asyncio components
-        with patch('asyncio.new_event_loop') as mock_new_loop, \
-             patch('asyncio.set_event_loop') as mock_set_loop:
-            
-            mock_loop = Mock()
-            mock_new_loop.return_value = mock_loop
-            mock_loop.run_until_complete.return_value = expected_response
-            
-            result = conversation_service._get_response(user_message)
-            
-            assert result == expected_response
-            mock_loop.close.assert_called_once()
-    
-    def test_get_response_error(self, conversation_service, mock_client):
-        """Test _get_response with error"""
-        user_message = "Test message"
-        
-        with patch('asyncio.new_event_loop', side_effect=Exception("Test error")):
-            result = conversation_service._get_response(user_message)
-            
-            assert result == "Error: Test error"
+        assert mock_st.session_state.get("ai_thinking") is False
+        assert mock_st.session_state.get("streaming_active") is False
+        assert mock_st.session_state.get("stream_chunks") is None
 
 
 if __name__ == "__main__":

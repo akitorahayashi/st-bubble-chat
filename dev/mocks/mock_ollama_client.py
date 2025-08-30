@@ -3,9 +3,9 @@ from typing import AsyncGenerator
 
 from src.clients.ollama_api_client.interface import OllamaClientInterface
 
-# Streaming configuration constants
-CHARACTER_DELAY = 0.08  # Delay between characters (seconds)
-WORD_SPACE_DELAY = 0.05  # Delay for spaces between words (seconds)
+# Streaming configuration
+CHARACTER_DELAY = 0.05  # Delay between characters (seconds)
+SPACE_DELAY = 0.02      # Delay for spaces between words (seconds)
 
 
 class MockOllamaApiClient(OllamaClientInterface):
@@ -15,11 +15,11 @@ class MockOllamaApiClient(OllamaClientInterface):
 
     def __init__(self):
         self.mock_responses = [
-            "こんにちは！どのようなお手伝いができますか？",
-            "それは興味深い質問ですね。詳しく教えてください。",
-            "分かりました。他に何かご質問はありますか？",
-            "そうですね、その通りだと思います。",
-            "申し訳ございませんが、もう少し具体的に教えていただけますか？",
+            "Hello! How can I help you today?",
+            "That's an interesting question. Could you tell me more about it?",
+            "I understand. Is there anything else you'd like to know?",
+            "Yes, I think you're absolutely right about that.",
+            "I'm sorry, but could you be more specific about what you're looking for?",
         ]
         self.response_index = 0
 
@@ -36,7 +36,7 @@ class MockOllamaApiClient(OllamaClientInterface):
             
             # Add space after word (except for the last word)
             if i < len(words) - 1:
-                await asyncio.sleep(WORD_SPACE_DELAY)
+                await asyncio.sleep(SPACE_DELAY)
                 yield " "
 
     def generate(self, prompt: str, model: str = None) -> AsyncGenerator[str, None]:
@@ -50,24 +50,24 @@ class MockOllamaApiClient(OllamaClientInterface):
         Returns:
             AsyncGenerator yielding text chunks.
         """
-        # 特定の入力に対するカスタム応答
+        # Custom responses for specific inputs
         custom_responses = {
-            "fsfs": "（fsfs に対するモック応答）",
-            "こんにちは": "こんにちは！元気ですか？",
-            "hello": "Hello! How can I help you?",
-            "test": "テスト用のモック応答です。",
-            "テスト": "これはテスト応答です。",
+            "hello": "Hello! Nice to meet you!",
+            "hi": "Hi there! How are you doing?",
+            "test": "This is a test response from the mock client.",
+            "help": "I'm here to help! What would you like to know?",
+            "thanks": "You're welcome! Happy to help anytime.",
         }
 
-        # カスタム応答をチェック
+        # Check for custom responses
         for key, response in custom_responses.items():
             if prompt.lower().strip() == key.lower():
                 return self._stream_response(response)
 
-        # デフォルトのモック応答
+        # Default mock response
         response = self.mock_responses[self.response_index % len(self.mock_responses)]
         self.response_index += 1
         
-        full_response = f"{response}\n\n（{prompt[:30]} に対するモック応答）"
+        full_response = f"{response}\n\n(Mock response to: {prompt[:30]}{'...' if len(prompt) > 30 else ''})"
         
         return self._stream_response(full_response)
