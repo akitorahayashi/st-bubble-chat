@@ -168,12 +168,3 @@ def render_chat_messages(messages):
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-def render_sidebar():
-    """Render sidebar with chat controls"""
-    with st.sidebar:
-        st.title("Chat")
-        if st.button("⟲ New Chat", help="Clear history and start a new chat", key="new_chat_btn"):
-            st.session_state.messages.clear()
-            if "ai_thinking" in st.session_state:
-                del st.session_state.ai_thinking
-            st.rerun()

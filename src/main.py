@@ -1,5 +1,6 @@
 import streamlit as st
-from components.chat_ui import load_css, render_chat_messages, render_thinking_bubble, render_sidebar
+from components.chat_ui import load_css, render_chat_messages, render_thinking_bubble
+from components.sidebar import render_sidebar
 from services.conversation_service import handle_ai_thinking, should_start_ai_thinking
 from services.ollama_api_client import get_ollama_client
 
@@ -12,6 +13,9 @@ if "messages" not in st.session_state:
 # Ollama APIクライアントを初期化（リロード時に環境変数を再読み込み）
 if "ollama_client" not in st.session_state:
     st.session_state.ollama_client = get_ollama_client()
+
+# CSSを読み込み
+load_css()
 
 # サイドバーを描画
 render_sidebar()
@@ -28,9 +32,6 @@ else:
             # ユーザーメッセージをすぐに追加して表示
             st.session_state.messages.append({"role": "user", "content": user_input})
             st.rerun()
-
-# CSSを読み込み
-load_css()
 
 # チャットメッセージを描画
 render_chat_messages(st.session_state.messages)
