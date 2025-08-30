@@ -1,47 +1,60 @@
+
 import streamlit as st
-from components.chat_ui import load_css, render_chat_messages, render_thinking_bubble
+from components.chat_ui import render_chat_messages, render_thinking_bubble
 from components.sidebar import render_sidebar
-from services.conversation_service import handle_ai_thinking, should_start_ai_thinking
-from services.ollama_api_client import get_ollama_client
+from services.conversation_service import ConversationService
+import os
+from clients.ollama_api_client import OllamaApiClient
 
-st.title("Bubble Chat UI")
+def main():
+    st.title("Bubble Chat UI")
+    initialize_session()
+    draw_sidebar()
+    handle_user_input()
+    draw_chat_messages()
+    handle_ai_response()
+    check_start_ai_thinking()
+    
+def initialize_session():
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    if "ollama_client" not in st.session_state:
+        is_debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes", "on")
+        if is_debug:
+            from dev.mocks.mock_ollama_client import MockOllamaApiClient
+            st.session_state.ollama_client = MockOllamaApiClient()
+        else:
+            st.session_state.ollama_client = OllamaApiClient()
+    if "conversation_service" not in st.session_state:
+        st.session_state.conversation_service = ConversationService(st.session_state.ollama_client)
 
-# セッション状態の初期化
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+def draw_sidebar():
+    render_sidebar()
 
-# Ollama APIクライアントを初期化（リロード時に環境変数を再読み込み）
-if "ollama_client" not in st.session_state:
-    st.session_state.ollama_client = get_ollama_client()
+def draw_chat_messages():
+    render_chat_messages(st.session_state.messages)
 
-# CSSを読み込み
-load_css()
-
-# サイドバーを描画
-render_sidebar()
-
-# AI処理中はチャット入力を無効化
-is_ai_thinking = st.session_state.get("ai_thinking", False)
-if is_ai_thinking:
-    st.chat_input("AIが応答中です...", disabled=True)
-else:
+def handle_user_input():
+    is_ai_thinking = st.session_state.get("ai_thinking", False)
+    if is_ai_thinking:
+        st.chat_input("AIが応答中です...", disabled=True)
+        return
     user_input = st.chat_input("メッセージを入力")
     if user_input is not None:
         user_input = user_input.strip()
         if user_input:
-            # ユーザーメッセージをすぐに追加して表示
             st.session_state.messages.append({"role": "user", "content": user_input})
             st.rerun()
 
-# チャットメッセージを描画
-render_chat_messages(st.session_state.messages)
+def handle_ai_response():
+    if st.session_state.get("ai_thinking", False):
+        st.markdown(render_thinking_bubble(), unsafe_allow_html=True)
+        st.session_state.conversation_service.handle_ai_thinking()
 
-# AIが応答中の場合の思考中吹き出し表示
-if st.session_state.get("ai_thinking", False):
-    st.markdown(render_thinking_bubble(), unsafe_allow_html=True)
-    handle_ai_thinking(st.session_state.ollama_client)
+def check_start_ai_thinking():
+    if st.session_state.conversation_service.should_start_ai_thinking():
+        st.session_state.ai_thinking = True
+        st.rerun()
 
-# ユーザーメッセージが追加されたばかりで、まだAI応答がない場合
-if should_start_ai_thinking():
-    st.session_state.ai_thinking = True
-    st.rerun()
+if __name__ == "__main__" or True:
+    main()

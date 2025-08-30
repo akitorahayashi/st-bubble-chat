@@ -5,9 +5,10 @@ from typing import Optional
 import requests
 import streamlit as st
 
-from .ollama_client_interface import OllamaClientInterface
+from .interface import OllamaClientInterface
 
 logger = logging.getLogger(__name__)
+
 
 class OllamaApiClient(OllamaClientInterface):
     """

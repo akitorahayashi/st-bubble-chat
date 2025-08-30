@@ -3,21 +3,6 @@ from pathlib import Path
 import html
 
 
-def load_css():
-    """Load custom styles"""
-    st.markdown("""
-    <style>
-    .thinking-dots {
-        animation: thinking 1.5s infinite;
-    }
-    @keyframes thinking {
-        0%, 50%, 100% { opacity: 1; }
-        25%, 75% { opacity: 0.5; }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-
 def render_user_message(message):
     """Render user message with inline styles"""
     return f"""
@@ -88,6 +73,13 @@ def render_thinking_bubble():
         max-width: 70%;
         padding: 12px 16px;
         border-radius: 20px;
+    }
+    .thinking-dots {
+        animation: thinking 1.5s infinite;
+    }
+    @keyframes thinking {
+        0%, 50%, 100% { opacity: 1; }
+        25%, 75% { opacity: 0.5; }
     }
     </style>
     <div class="thinking-message">
