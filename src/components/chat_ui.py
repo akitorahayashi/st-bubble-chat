@@ -116,7 +116,7 @@ def render_chat_messages(messages):
             html_content = render_user_message(msg["content"])
         else:
             html_content = render_ai_message(msg["content"])
-        
+
         # Use a container with unique key to prevent re-rendering
         with st.container(key=f"msg_{i}_{msg['role']}"):
             st.markdown(html_content, unsafe_allow_html=True)

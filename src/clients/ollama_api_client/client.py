@@ -31,7 +31,9 @@ class OllamaApiClient(OllamaClientInterface):
             )
         self.generate_endpoint = f"{self.api_url}/api/v1/generate"
 
-    async def _stream_response(self, prompt: str, model: str) -> AsyncGenerator[str, None]:
+    async def _stream_response(
+        self, prompt: str, model: str
+    ) -> AsyncGenerator[str, None]:
         """
         Stream response from the Ollama API.
         """
@@ -40,9 +42,11 @@ class OllamaApiClient(OllamaClientInterface):
             "model_name": model,
             "stream": True,
         }
-        
+
         try:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, read=120.0)) as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(10.0, read=120.0)
+            ) as client:
                 async with client.stream(
                     "POST",
                     self.generate_endpoint,
@@ -50,7 +54,7 @@ class OllamaApiClient(OllamaClientInterface):
                     headers={"Accept": "text/event-stream"},
                 ) as response:
                     response.raise_for_status()
-                    
+
                     async for line in response.aiter_lines():
                         if line.startswith("data: "):
                             try:

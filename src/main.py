@@ -1,5 +1,4 @@
 import os
-import time
 
 import streamlit as st
 
@@ -51,11 +50,11 @@ def draw_chat_messages():
 
 def handle_user_input():
     is_ai_thinking = st.session_state.get("ai_thinking", False)
-    
+
     if is_ai_thinking:
         st.chat_input("AIが応答中です...", disabled=True)
         return
-        
+
     user_input = st.chat_input("メッセージを入力")
     if user_input is not None:
         user_input = user_input.strip()
@@ -69,7 +68,7 @@ def handle_ai_response():
         # Show thinking bubble only before streaming starts
         if not st.session_state.get("streaming_active", False):
             st.markdown(render_thinking_bubble(), unsafe_allow_html=True)
-        
+
         st.session_state.conversation_service.handle_ai_thinking()
 
 
