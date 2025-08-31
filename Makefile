@@ -12,7 +12,6 @@
 .DEFAULT_GOAL := help
 
 # Specify the Python executable and main Streamlit file name
-PYTHON_INTERPRETER := poetry run python
 STREAMLIT_APP_FILE := ./src/main.py
 
 # ==============================================================================
