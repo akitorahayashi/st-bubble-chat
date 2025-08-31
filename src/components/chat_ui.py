@@ -14,7 +14,7 @@ def render_user_message(message):
         margin: 10px 0;
     }}
     .user-content {{
-        background-color: #007bff;
+        background-color: {st.get_option("chat.userMessageColor", "#007bff")};
         color: white;
         max-width: 70%;
         padding: 12px 16px;
@@ -41,7 +41,7 @@ def render_ai_message(message):
         margin: 10px 0;
     }}
     .ai-content {{
-        background-color: #f1f1f1;
+        background-color: {st.get_option("chat.aiMessageColor", "#f1f1f1")};
         color: #333;
         max-width: 70%;
         padding: 12px 16px;
@@ -68,7 +68,7 @@ def render_thinking_bubble():
         margin: 10px 0;
     }
     .thinking-content {
-        background-color: #f1f1f1;
+        background-color: {st.get_option("chat.aiMessageColor", "#f1f1f1")};
         color: #333;
         max-width: 70%;
         padding: 12px 16px;
